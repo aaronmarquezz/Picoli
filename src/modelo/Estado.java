@@ -58,7 +58,8 @@ public class Estado {
 		double produccionReal;
 		produccionReal = trabajadores.size() * cantidadProducidaPorTrabajador;
 
-		return produccionReal;
+		return produccionReal; 
+		
 	}
 
 	// entendemos que objetivoproduccion es el incremento porcentual.
