@@ -21,6 +21,8 @@ public class Estado {
 	private final double edadJubilacion = 65;
 	private final double edadMadurez = 18;
 	private final double necesidadVitalBase = 100;
+	private int numeroDefunciones = 0;
+	private Queue<Double> colaMediaHistorica = new LinkedList<>();
 
 	// poblacion
 	private Sector<Menor> menores;
@@ -63,13 +65,15 @@ public class Estado {
 	public double gestionarEmpleos(double objetivoProduccion) {
 		double produccionPotencial, produccionReal, produccionFutura;
 		produccionPotencial = (trabajadores.size() + parados.size()) * cantidadProducidaPorTrabajador;
-		// TODO no se si hacer eso asi o ponerlo como atrinbuto de la clase (funcion de
+		// TODO no se si hacer eso asi o ponerlo como atributo de la clase (funcion de
 		// arriba hace set y no return).
 		produccionReal = calcularCantidadProducir(objetivoProduccion);
 		produccionFutura = produccionReal * (1 + objetivoProduccion / 100);
 		// calculo diferencial. si es positiva tengo que despedir, me sobran personas. y
 		// al reves.
 		double diferencial = produccionReal - produccionFutura;
+		// TODO aquí voy a añadir a la cola de medias historicas de diferenciales.
+		colaMediaHistorica.add(diferencial);
 		// contratar. ¿Cuantos contratamos?
 		int personasAfectadas = (int) Math.ceil((diferencial / cantidadProducidaPorTrabajador));
 		// el problema es que si personas afectadas es mayor que produccion potencial no
@@ -96,32 +100,25 @@ public class Estado {
 	}
 
 	public void gestionarNacimientos() {
-		//de aqui me falta ver donde ppner la cola de nacimiento, crearla, ponerle limite 5, poner cada año 
-//		el diferencial dentro de la cola, poner el texto de calculo de la media en una funcion, hacer contador
-//		defunciones, y saber cómo crear a los menores
-//		
-		
-		
-		//TODO preguntar si tenemos una cola de medias nacimiento. Como yo lo haria:
-			//TODO creamos cola en algun sitio y le damos de limite 5 de alguna forma. 
-			Queue<Double> colaMedia = new LinkedList<>();
-			//TODO en algun sitio vamos poniendo en la cola los valores de diferencial de cada año. 
-			//ya aqui en esta funcion tenemos que recorrer la cola y sacar la media. Podriamos hacerlo en una funcion con el siguiente codigo
-			double suma = 0;
-			for (Double elemento : colaMedia) {
-				   suma = suma + elemento;
-			}
-			int media =  (int) Math.ceil(suma/colaMedia.size());
-		
-		
-		//TODO preguntar si tenemos un contador de defunciones, si no, dentro del if de enterrar añadir y retornar uno. 
-		int nacimientosPonderados = defunciones - media;
-		//TODO que atributos ponemos?? hay un generador random de menores?
-		for (int i = 0; i < nacimientosPonderados; i++) {
-			menores.add(new Menor());
+		// TODO ¿donde le vamos actualizando año a año el diferencial?
+		// control de que la cola no tenga más de 5 periodos.
+		if (colaMediaHistorica.size() > 5) {
+			colaMediaHistorica.remove(0);
 		}
-		
-		
+		// ya aqui en esta funcion tenemos que recorrer la cola y sacar la media.
+		// Podriamos hacerlo en una funcion con el siguiente codigo
+		double suma = 0;
+		for (Double elemento : colaMediaHistorica) {
+			suma = suma + elemento;
+		}
+		int media = (int) Math.ceil(suma / colaMediaHistorica.size());
+
+		int nacimientosPonderados = numeroDefunciones - media;
+
+		for (int i = 0; i < nacimientosPonderados; i++) {
+			menores.add(new Menor(80, 100));
+		}
+
 	}
 
 	////////////////////////////////////////////////////
@@ -183,6 +180,8 @@ public class Estado {
 			while (iterator.hasNext()) {
 				Ser ser = iterator.next();
 				if (!ser.isVivo()) {
+					// TODO de esta forma no tenemos que retornarlo?
+					this.numeroDefunciones++;
 					iterator.remove();
 				}
 			}
